@@ -4,6 +4,7 @@
  */
 
 import type {
+  KeysConfig,
   KnobConfig,
   PadConfig,
   ButtonConfig,
@@ -12,6 +13,85 @@ import type {
   PadMode,
   ButtonMode,
 } from "../model/config.ts";
+
+interface KeysEditorProps {
+  config: KeysConfig;
+  active?: boolean;
+  onUpdate: (updates: Partial<KeysConfig>) => void;
+}
+
+export function KeysEditor({ config, active, onUpdate }: KeysEditorProps) {
+  return (
+    <div
+      class={`border rounded-lg p-3 transition-all ${
+        active
+          ? "border-amber-500 bg-amber-950 shadow-lg shadow-amber-500/50"
+          : "border-gray-700 bg-gray-800 hover:border-gray-600"
+      }`}
+    >
+      <h3 class="font-semibold mb-2 text-sm text-gray-200">Keybed</h3>
+
+      <div class="space-y-2">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Base Note</label>
+          <input
+            type="number"
+            min="0"
+            max="127"
+            class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+            value={config.baseNote}
+            onChange={(e) => onUpdate({ baseNote: parseInt(e.currentTarget.value) })}
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Octave</label>
+          <input
+            type="number"
+            min="-5"
+            max="5"
+            class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+            value={config.octave}
+            onChange={(e) => onUpdate({ octave: parseInt(e.currentTarget.value) })}
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Channel</label>
+          <select
+            class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+            value={config.channel}
+            onChange={(e) => onUpdate({ channel: parseInt(e.currentTarget.value) as MidiChannel })}
+          >
+            {[...Array(16)].map((_, i) => (
+              <option key={i} value={i}>
+                {i + 1}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs text-gray-400 mb-1">Velocity Curve</label>
+          <select
+            class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-sm text-gray-200 focus:border-blue-500 focus:outline-none"
+            value={config.velocityCurve}
+            onChange={(e) => onUpdate({ velocityCurve: parseInt(e.currentTarget.value) })}
+          >
+            <option value="0">Curve 1 (Linear)</option>
+            <option value="1">Curve 2 (Soft)</option>
+            <option value="2">Curve 3 (Hard)</option>
+            <option value="3">Curve 4 (Fixed)</option>
+            <option value="4">Curve 5</option>
+            <option value="5">Curve 6</option>
+            <option value="6">Curve 7</option>
+            <option value="7">Curve 8</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface KnobEditorProps {
   index: number;

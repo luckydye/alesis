@@ -6,7 +6,7 @@
 import { Component } from "preact";
 import { ErrorBoundary } from "./error-boundary.tsx";
 import { DeviceSelector, type V49Device } from "./device-selector.tsx";
-import { KnobEditor, PadEditor, ButtonEditor } from "./controls.tsx";
+import { KeysEditor, KnobEditor, PadEditor, ButtonEditor } from "./controls.tsx";
 import { MidiStatus } from "./midi-status.tsx";
 import type { MidiLogEntry } from "./midi-log.tsx";
 import { ControllerIllustration } from "./controller-illustration.tsx";
@@ -29,7 +29,7 @@ interface AppState {
   config: V49Config | null;
   sending: boolean;
   lastMidiMessage: MidiLogEntry | null;
-  activeControl: { type: "knob" | "pad" | "button"; index: number } | null;
+  activeControl: { type: "knob" | "pad" | "button" | "keys"; index?: number } | null;
 }
 
 export class App extends Component<AppProps, AppState> {
@@ -123,11 +123,14 @@ export class App extends Component<AppProps, AppState> {
       const padIndex = this.state.config.pads.findIndex((p) => p.mode === "note" && p.noteOrCC === note);
       if (padIndex !== -1) {
         this.setActiveControl("pad", padIndex);
+        return;
       }
+
+      this.setActiveControl("keys");
     }
   };
 
-  setActiveControl = (type: "knob" | "pad" | "button", index: number) => {
+  setActiveControl = (type: "knob" | "pad" | "button" | "keys", index?: number) => {
     if (this.activeControlTimeout) {
       clearTimeout(this.activeControlTimeout);
     }
@@ -139,8 +142,9 @@ export class App extends Component<AppProps, AppState> {
     }, 1000);
   };
 
-  handleControlClick = (type: "knob" | "pad" | "button", index: number) => {
-    const element = document.getElementById(`${type}-${index}`);
+  handleControlClick = (type: "knob" | "pad" | "button" | "keys", index?: number) => {
+    const elementId = type === "keys" ? "keys-editor" : `${type}-${index}`;
+    const element = document.getElementById(elementId);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
       this.setActiveControl(type, index);
@@ -259,11 +263,26 @@ export class App extends Component<AppProps, AppState> {
             <div class="flex-none p-6">
               {connected && config && (
                 <div class="gap-6 overflow-auto flex">
+                  {/* Keybed */}
+                  <section class="flex-none">
+                    <div class="flex items-center justify-between mb-3">
+                      <h2 class="text-lg font-semibold text-gray-200 pr-6">Keybed</h2>
+                      <span class="text-xs text-gray-500">49-Key Keybed</span>
+                    </div>
+                    <div id="keys-editor">
+                      <KeysEditor
+                        config={config.keys}
+                        active={activeControl?.type === "keys"}
+                        onUpdate={(updates) => state.updateKeys(updates)}
+                      />
+                    </div>
+                  </section>
+
                   {/* Knobs */}
                   <section class="flex-none">
                     <div class="flex items-center justify-between mb-3">
                       <h2 class="text-lg font-semibold text-gray-200">Knobs</h2>
-                      <span class="text-xs text-gray-500">4 Rotary Controllers</span>
+                      <span class="text-xs text-gray-500">4 Rotary Knobs</span>
                     </div>
                     <div class="flex gap-4">
                       {config.knobs.map((knob, i) => (

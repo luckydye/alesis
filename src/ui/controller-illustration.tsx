@@ -7,15 +7,15 @@ import type { V49Config } from "../model/config.ts";
 
 interface ControllerIllustrationProps {
   config: V49Config | null;
-  activeControl: { type: "knob" | "pad" | "button"; index: number } | null;
-  onControlClick?: (type: "knob" | "pad" | "button", index: number) => void;
+  activeControl: { type: "knob" | "pad" | "button" | "keys"; index?: number } | null;
+  onControlClick?: (type: "knob" | "pad" | "button" | "keys", index?: number) => void;
 }
 
 export function ControllerIllustration({ config, activeControl, onControlClick }: ControllerIllustrationProps) {
   const isActive = (type: string, index: number) =>
     activeControl?.type === type && activeControl?.index === index;
 
-  const handleClick = (type: "knob" | "pad" | "button", index: number) => {
+  const handleClick = (type: "knob" | "pad" | "button" | "keys", index?: number) => {
     if (onControlClick) {
       onControlClick(type, index);
     }
@@ -175,25 +175,34 @@ export function ControllerIllustration({ config, activeControl, onControlClick }
         </g>
 
         {/* Keyboard - starts after wheels */}
-        <g transform="translate(40, 0)">
+        <g
+          transform="translate(40, 0)"
+          onClick={() => handleClick("keys")}
+          class="cursor-pointer"
+        >
           {/* White keys (49 keys = 28 white keys approximately) */}
-          {[...Array(28)].map((_, i) => (
-            <rect
-              key={i}
-              x={i * 28}
-              y="0"
-              width="27"
-              height="65"
-              rx="2"
-              fill="#e5e7eb"
-              stroke="#9ca3af"
-              stroke-width="1"
-            />
-          ))}
+          {[...Array(28)].map((_, i) => {
+            const active = activeControl?.type === "keys";
+            return (
+              <rect
+                key={i}
+                x={i * 28}
+                y="0"
+                width="27"
+                height="65"
+                rx="2"
+                fill={active ? "#fbbf24" : "#e5e7eb"}
+                stroke={active ? "#f59e0b" : "#9ca3af"}
+                stroke-width="1"
+                class="transition-all duration-300"
+              />
+            );
+          })}
           {/* Black keys pattern */}
           {[...Array(28)].map((_, i) => {
             const octavePos = i % 7;
             if (octavePos === 2 || octavePos === 6) return null;
+            const active = activeControl?.type === "keys";
             return (
               <rect
                 key={i}
@@ -202,9 +211,10 @@ export function ControllerIllustration({ config, activeControl, onControlClick }
                 width="14"
                 height="38"
                 rx="1"
-                fill="#1f2937"
-                stroke="#111827"
+                fill={active ? "#d97706" : "#1f2937"}
+                stroke={active ? "#b45309" : "#111827"}
                 stroke-width="1"
+                class="transition-all duration-300"
               />
             );
           })}
