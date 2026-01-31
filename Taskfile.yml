@@ -1,0 +1,22 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  default:
+    silent: true
+    cmd: task -l --sort none
+
+  setup:
+    desc: "Setup the project"
+    cmd: bun install --frozen-lockfile
+
+  dev:
+    desc: "Start dev server"
+    deps: [setup]
+    cmd: bun src/index.html --console
+
+  build:
+    desc: "Create a production build"
+    deps: [setup]
+    cmd: bun ./build.ts
