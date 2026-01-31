@@ -14,9 +14,9 @@ tasks:
   dev:
     desc: "Start dev server"
     deps: [setup]
-    cmd: bun src/index.html --console
+    cmd: bun run dev
 
   build:
     desc: "Create a production build"
     deps: [setup]
-    cmd: bun ./build.ts
+    cmd: bun run build
