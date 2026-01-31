@@ -247,7 +247,7 @@ export class App extends Component<AppProps, AppState> {
 
             {/* Fixed illustration at top */}
             {connected && config && (
-              <div class="border-b border-gray-800 p-6">
+              <div class="flex-1 p-6 flex justify-center items-center">
                 <ControllerIllustration
                   config={config}
                   activeControl={activeControl}
@@ -256,16 +256,16 @@ export class App extends Component<AppProps, AppState> {
               </div>
             )}
 
-            <div class="flex-1 overflow-auto">
+            <div class="flex-none p-6">
               {connected && config && (
-                <div class="p-6 flex gap-6">
+                <div class="gap-6 overflow-auto flex">
                   {/* Knobs */}
-                  <section class="flex-1 min-w-0">
+                  <section class="flex-none">
                     <div class="flex items-center justify-between mb-3">
                       <h2 class="text-lg font-semibold text-gray-200">Knobs</h2>
                       <span class="text-xs text-gray-500">4 Rotary Controllers</span>
                     </div>
-                    <div class="space-y-3">
+                    <div class="flex gap-4">
                       {config.knobs.map((knob, i) => (
                         <KnobEditor
                           key={i}
@@ -279,12 +279,12 @@ export class App extends Component<AppProps, AppState> {
                   </section>
 
                   {/* Pads */}
-                  <section class="flex-1 min-w-0">
+                  <section class="flex-none">
                     <div class="flex items-center justify-between mb-3">
                       <h2 class="text-lg font-semibold text-gray-200">Pads</h2>
                       <span class="text-xs text-gray-500">8 Velocity-Sensitive Pads</span>
                     </div>
-                    <div class="space-y-3">
+                    <div class="flex gap-4">
                       {config.pads.map((pad, i) => (
                         <PadEditor
                           key={i}
@@ -298,12 +298,12 @@ export class App extends Component<AppProps, AppState> {
                   </section>
 
                   {/* Buttons */}
-                  <section class="flex-1 min-w-0">
+                  <section class="flex-none">
                     <div class="flex items-center justify-between mb-3">
                       <h2 class="text-lg font-semibold text-gray-200">Buttons</h2>
                       <span class="text-xs text-gray-500">4 Function Buttons</span>
                     </div>
-                    <div class="space-y-3">
+                    <div class="flex gap-4">
                       {config.buttons.map((button, i) => (
                         <ButtonEditor
                           key={i}
