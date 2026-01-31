@@ -41,8 +41,7 @@ export function discoverV49Devices(access: MIDIAccess): V49Device[] {
 
   for (const [inputName, input] of inputs) {
     const baseName = inputName.replace(" Out", "");
-    const outputName = baseName + " In";
-    const output = outputs.get(outputName);
+    const output = outputs.get(baseName);
 
     if (output) {
       devices.push({
