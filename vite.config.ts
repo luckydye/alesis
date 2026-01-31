@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import Terminal from 'vite-plugin-terminal';
 
 export default defineConfig({
+  base: '/alesis/',
   plugins: [preact(), tailwindcss(), Terminal({
     console: 'terminal',
     output: ['terminal', 'console']
