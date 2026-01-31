@@ -16,6 +16,46 @@ export async function requestMidiAccess(): Promise<MIDIAccess> {
   return await navigator.requestMIDIAccess({ sysex: true });
 }
 
+export interface V49Device {
+  name: string;
+  input: MIDIInput;
+  output: MIDIOutput;
+}
+
+export function discoverV49Devices(access: MIDIAccess): V49Device[] {
+  const devices: V49Device[] = [];
+  const inputs = new Map<string, MIDIInput>();
+  const outputs = new Map<string, MIDIOutput>();
+
+  for (const port of access.inputs.values()) {
+    if (port.name?.includes("V49")) {
+      inputs.set(port.name, port);
+    }
+  }
+
+  for (const port of access.outputs.values()) {
+    if (port.name?.includes("V49")) {
+      outputs.set(port.name, port);
+    }
+  }
+
+  for (const [inputName, input] of inputs) {
+    const baseName = inputName.replace(" Out", "");
+    const outputName = baseName + " In";
+    const output = outputs.get(outputName);
+
+    if (output) {
+      devices.push({
+        name: baseName,
+        input,
+        output,
+      });
+    }
+  }
+
+  return devices;
+}
+
 export function findV49Device(access: MIDIAccess): { input: MIDIInput; output: MIDIOutput } {
   let input: MIDIInput | null = null;
   let output: MIDIOutput | null = null;

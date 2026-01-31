@@ -3,11 +3,11 @@
  * Initializes MIDI, state, and UI.
  */
 
-import { render, h } from "preact";
+import { render, h, createRef } from "preact";
 import { App } from "./ui/app.tsx";
 import { V49State } from "./model/state.ts";
 import { parseV49Config, encodeV49Config } from "./model/config.ts";
-import { requestMidiAccess, findV49Device, setupMessageHandler } from "./midi/device.ts";
+import { requestMidiAccess, discoverV49Devices, type V49Device as MidiV49Device } from "./midi/device.ts";
 import {
   createQueryMessage,
   createSetMessage,
@@ -17,57 +17,84 @@ import {
   extractPayload,
 } from "./midi/sysex.ts";
 import { CMD_CONFIG_REPLY } from "./midi/protocol.ts";
+import type { MidiLogEntry } from "./ui/midi-log.tsx";
+import type { V49Device } from "./ui/device-selector.tsx";
 
 const appState = new V49State();
+let midiInput: MIDIInput | null = null;
 let midiOutput: MIDIOutput | null = null;
+const appRef = createRef<App>();
 
-async function handleConnect(): Promise<void> {
+function addLogEntry(entry: MidiLogEntry): void {
+  const app = appRef.current;
+  if (app) {
+    app.addLogEntry(entry);
+  }
+}
+
+function classifyMessage(data: Uint8Array): "sysex" | "note" | "cc" | "other" {
+  if (data[0] === 0xf0) return "sysex";
+  const status = data[0]! & 0xf0;
+  if (status === 0x90 || status === 0x80) return "note";
+  if (status === 0xb0) return "cc";
+  return "other";
+}
+
+async function handleDiscover(): Promise<V49Device[]> {
   const access = await requestMidiAccess();
+  const devices = discoverV49Devices(access);
 
-  console.log("Available MIDI inputs:");
-  for (const input of access.inputs.values()) {
-    console.log(`  - ${input.name} (${input.manufacturer})`);
+  return devices.map((d) => ({
+    name: d.name,
+    inputId: d.input.id,
+    outputId: d.output.id,
+  }));
+}
+
+async function handleConnect(device: V49Device): Promise<void> {
+  const access = await requestMidiAccess();
+  const devices = discoverV49Devices(access);
+
+  const selectedDevice = devices.find((d) => d.input.id === device.inputId);
+  if (!selectedDevice) {
+    throw new Error("Selected device not found");
   }
 
-  console.log("Available MIDI outputs:");
-  for (const output of access.outputs.values()) {
-    console.log(`  - ${output.name} (${output.manufacturer})`);
-  }
+  midiInput = selectedDevice.input;
+  midiOutput = selectedDevice.output;
 
-  const { input, output } = findV49Device(access);
-  console.log("Connected to input:", input.name);
-  console.log("Connected to output:", output.name);
+  selectedDevice.input.onmidimessage = (event) => {
+    const data = event.data;
+    const entry: MidiLogEntry = {
+      timestamp: Date.now(),
+      direction: "in",
+      type: classifyMessage(data),
+      port: selectedDevice.input.name || "Unknown",
+      data,
+    };
 
-  midiOutput = output;
-
-  setupMessageHandler(input, (data) => {
-    if (data[0] === 0xf0) {
-      console.log("Received SysEx:", Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
-    }
+    addLogEntry(entry);
 
     if (!isSysExMessage(data)) return;
-
-    if (!isAlesisMessage(data)) {
-      console.log("Not an Alesis message - manufacturer ID:", data[1]?.toString(16), data[2]?.toString(16), data[3]?.toString(16));
-      return;
-    }
+    if (!isAlesisMessage(data)) return;
 
     const cmd = extractCommand(data);
-    console.log("Alesis command:", cmd.toString(16));
-
     if (cmd === CMD_CONFIG_REPLY) {
-      console.log("Received config reply");
       const payload = extractPayload(data);
-      console.log("Payload length:", payload.length);
       const config = parseV49Config(payload);
-      console.log("Parsed config:", config);
       appState.setConfig(config);
     }
-  });
+  };
 
   const queryMsg = createQueryMessage();
-  console.log("Sending query:", Array.from(queryMsg).map(b => b.toString(16).padStart(2, '0')).join(' '));
-  output.send(queryMsg);
+  addLogEntry({
+    timestamp: Date.now(),
+    direction: "out",
+    type: "sysex",
+    port: selectedDevice.output.name || "Unknown",
+    data: queryMsg,
+  });
+  selectedDevice.output.send(queryMsg);
 }
 
 async function handleSendToDevice(): Promise<void> {
@@ -81,6 +108,15 @@ async function handleSendToDevice(): Promise<void> {
 
   const payload = encodeV49Config(appState.config);
   const msg = createSetMessage(payload);
+
+  addLogEntry({
+    timestamp: Date.now(),
+    direction: "out",
+    type: "sysex",
+    port: midiOutput.name || "Unknown",
+    data: msg,
+  });
+
   midiOutput.send(msg);
 }
 
@@ -90,6 +126,12 @@ if (!root) {
 }
 
 render(
-  <App state={appState} onConnect={handleConnect} onSendToDevice={handleSendToDevice} />,
+  <App
+    ref={appRef}
+    state={appState}
+    onDiscover={handleDiscover}
+    onConnect={handleConnect}
+    onSendToDevice={handleSendToDevice}
+  />,
   root
 );

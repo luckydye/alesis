@@ -28,12 +28,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.error) {
       return (
-        <div class="p-8 bg-red-50 border border-red-200 rounded-lg">
-          <h1 class="text-2xl font-bold text-red-900 mb-4">Error</h1>
-          <p class="text-red-800 font-mono text-sm whitespace-pre-wrap">
-            {this.state.error.message}
-          </p>
-          <p class="text-red-600 text-xs mt-4">Check console for details.</p>
+        <div class="min-h-screen bg-gray-950 flex items-center justify-center p-8">
+          <div class="max-w-2xl w-full bg-red-950 border border-red-700 rounded-lg p-8">
+            <h1 class="text-2xl font-bold text-red-300 mb-4">Error</h1>
+            <p class="text-red-200 font-mono text-sm whitespace-pre-wrap">
+              {this.state.error.message}
+            </p>
+            <p class="text-red-400 text-xs mt-4">Check console for details.</p>
+          </div>
         </div>
       );
     }
