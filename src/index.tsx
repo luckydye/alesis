@@ -7,7 +7,7 @@ import { render, h, createRef } from "preact";
 import { App } from "./ui/app.tsx";
 import { V49State } from "./model/state.ts";
 import { parseV49Config, encodeV49Config } from "./model/config.ts";
-import { requestMidiAccess, discoverV49Devices, type V49Device as MidiV49Device } from "./midi/device.ts";
+import { requestMidiAccess, discoverV49Devices } from "./midi/device.ts";
 import {
   createQueryMessage,
   createSetMessage,
